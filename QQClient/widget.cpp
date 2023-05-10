@@ -1,26 +1,28 @@
 #include "widget.h"
 #include "ui_widget.h"
-#include "register.h"
 #include "message.h"
 #include <QDebug>
-#include "register.h"
+#include<QMessageBox>
 
 
-Widget::Widget(QWidget *parent) :
+Widget::Widget(QWidget *parent, bool fl) :
     QWidget(parent),
-    ui(new Ui::Widget)
+    ui(new Ui::Widget),
+    flag(fl)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);//登录窗口
 
-    connect(ui->RegisterButton,&QPushButton::clicked,[=](){
-        this->close();
+    connect(ui->RegisterButton,&QPushButton::clicked,this, [=](){
+        this->hide();
         Register* dialog = new Register;
         dialog->show();
+        delete dialog;
     });
 
-    connect(ui->LoginButton, &QPushButton::clicked, [=](){
+    connect(ui->LoginButton, &QPushButton::clicked, this, [=](){
         QString name = ui->UserNameText->text().trimmed();
         QString pwd = ui->UserPwdText->text().trimmed();
+        UserName = name;
 
         // 构造登录消息
         Message msg;
@@ -37,32 +39,32 @@ Widget::Widget(QWidget *parent) :
         // 建立连接
         tcpSocket->connectToHost(QHostAddress::LocalHost, port);
         if (tcpSocket->waitForConnected()) {
-            qDebug() << "连接成功";
             // 发送登录消息
             QByteArray data;
             QDataStream stream(&data, QIODevice::WriteOnly);
             stream << msg;
-            tcpSocket->write(data);
+            tcpSocket->write(data);//把用户信息发到服务器端
             tcpSocket->flush();
-            connect(tcpSocket, &QTcpSocket::readyRead, [=]() {
-                // 收到服务器端发送的消息
-                QByteArray response = tcpSocket->readAll();
-                qDebug() << "Received message from server:" << response;
+            connect(tcpSocket, &QTcpSocket::readyRead, this, [=]() {
+                if(flag){
+                    // 收到服务器端发送的消息
+                    QByteArray ServerResponseData = tcpSocket->readAll();
+                    QDataStream in(&ServerResponseData, QIODevice::ReadOnly);
+                    Message ServerResponse;
+                    in >> ServerResponse;
 
-                // 构造回复消息
-                Message replyMsg;
-                replyMsg.setUserName(name);
-                replyMsg.setUserPwd(pwd);
-                replyMsg.setInetAddress(QString("127.0.0.1"));
-                replyMsg.setPort(8888);
-                replyMsg.setMsgType("MD_REPLY");
-
-                // 回复消息给服务器
-                QByteArray replyData;
-                QDataStream replyStream(&replyData, QIODevice::WriteOnly);
-                replyStream << replyMsg;
-                tcpSocket->write(replyData);
-                tcpSocket->flush();
+                    if(ServerResponse.getMsgType() == "MD_LOGIN_FAILD"){
+                        QMessageBox::critical(nullptr,
+                                "Login Error",
+                                ServerResponse.getMsgText());
+                    }
+                    else{
+                        this->hide();
+                        flag = false;
+                        ClientDialog = new Client(nullptr, tcpSocket, UserName);
+                        ClientDialog->show();
+                    }
+                }
             });
         } else {
             qDebug() << "连接失败" << tcpSocket->error();
@@ -72,5 +74,8 @@ Widget::Widget(QWidget *parent) :
 
 Widget::~Widget()
 {
+    tcpSocket->close();
+    delete tcpSocket;
+    delete ClientDialog;
     delete ui;
 }

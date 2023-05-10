@@ -28,19 +28,19 @@ SOURCES += \
         main.cpp \
         widget.cpp \
     register.cpp \
-    clientui.cpp \
-    message.cpp
+    message.cpp \
+    client.cpp
 
 HEADERS += \
         widget.h \
     register.h \
-    clientui.h \
-    message.h
+    message.h \
+    client.h
 
 FORMS += \
         widget.ui \
     register.ui \
-    clientui.ui
+    client.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

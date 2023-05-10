@@ -2,7 +2,12 @@
 
 Message::Message()
 {
-
+    strUserName = ".";
+    strUserPwd = ".";
+    strMsgType = ".";
+    strMsgText = ".";
+    strInetAddress = ".";
+    Port = 0;
 }
 
 
@@ -47,4 +52,22 @@ QDataStream& operator<<(QDataStream& out, const Message& obj){
     out << obj.strInetAddress << obj.strMsgText << obj.strMsgType
          << obj.strUserName << obj.strUserPwd;
     return out;
+}
+QDataStream& operator>>(QDataStream& in, Message& msg){
+    // 依次读取各个成员变量
+   QString userName;
+   QString userPwd;
+   QString inetAddress;
+   QString text;
+   QString msgType;
+
+   in >> inetAddress >> text >> msgType >> userName >> userPwd;
+
+   msg.setUserName(userName);
+   msg.setUserPwd(userPwd);
+   msg.setInetAddress(inetAddress);
+   msg.setMsgText(text);
+   msg.setMsgType(msgType);
+
+   return in;
 }

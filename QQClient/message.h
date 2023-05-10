@@ -21,6 +21,7 @@ public:
     QString getInetAddress();
     quint16 getPort();
     friend QDataStream& operator<<(QDataStream& out, const Message& obj);
+    friend QDataStream& operator>>(QDataStream& in, Message& msg);
 private:
     QString strUserName;
     QString strUserPwd;
