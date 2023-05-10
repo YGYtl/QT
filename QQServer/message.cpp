@@ -2,7 +2,12 @@
 
 Message::Message()
 {
-
+    strUserName = ".";
+    strUserPwd = ".";
+    strMsgType = ".";
+    strMsgText = ".";
+    strInetAddress = ".";
+    Port = 0;
 }
 
 void Message::setUserName(QString userName){

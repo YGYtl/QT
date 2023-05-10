@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,12 +28,14 @@ SOURCES += \
         main.cpp \
         widget.cpp \
     message.cpp \
-    receivemessagethread.cpp
+    databaseconnection.cpp \
+    membermanager.cpp
 
 HEADERS += \
         widget.h \
     message.h \
-    receivemessagethread.h
+    databaseconnection.h \
+    membermanager.h
 
 FORMS += \
         widget.ui
@@ -42,3 +44,9 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+INCLUDEPATH += "K:/MySQL8/mysql-8.0.16-winx64/include"
+LIBS += "K:/MySQL8/mysql-8.0.16-winx64/lib/libmysql.lib"
+
+
+
