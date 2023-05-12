@@ -24,6 +24,7 @@ public:
 private:
     Ui::Widget *ui;
     QTcpServer* m_server;
+    QTcpSocket* client;
     QList<QTcpSocket*> ClientList;
     MemberManager Mm;
 };

@@ -28,7 +28,7 @@ Widget::Widget(QWidget *parent) :
 
             ui->ShowMessageText->setText(QString("服务器正在监听..."));
             connect(m_server, &QTcpServer::newConnection, this, [=]() { // 使用this指针访问类成员变量和函数
-                QTcpSocket* client = m_server->nextPendingConnection();
+                client = m_server->nextPendingConnection();
                 qDebug() << "Client connected.";
 
                 connect(client, &QTcpSocket::readyRead, this, [=]() {
@@ -65,20 +65,8 @@ Widget::Widget(QWidget *parent) :
                             client->write(replyData);
                             client->flush();
 
-
-                            replyData.clear();
-                            Message tellOthersMsg;
-                            tellOthersMsg.setMsgType("MD_TALK");//转发给其他用户，有新用户加入
-                            tellOthersMsg.setMsgText(QString(msg.getUserName()+" has come in."));
                             ui->ShowMessageText->append(QString(msg.getUserName()+" has come in."));
-                            out << tellOthersMsg;
-                            qDebug() << ClientList.size();
-                            qDebug() << "---welcome " << replyData;
                             ClientList.push_back(client);
-                            for(auto it=ClientList.begin(); it!=ClientList.end(); it++){
-                                (*it)->write(replyData);
-                                (*it)->flush();
-                            }
                         }
                     }
                     else if(msg.getMsgType() == "MD_REGISTER"){
@@ -108,25 +96,45 @@ Widget::Widget(QWidget *parent) :
                         }
                     }
                     else if(msg.getMsgType() == "MD_QUIT"){
-                        for(auto it = ClientList.begin(); it!=ClientList.end(); it++){
+                        qDebug() << ClientList.size();
+                         for(auto it = ClientList.begin(); it!=ClientList.end(); it++){
                             if(*it == client){
+
+                                reply.setMsgType("MD_TALK");//转发给其他用户，有用户退出
+                                reply.setMsgText(QString(msg.getUserName()+" user has already logged out!"));
+                                ui->ShowMessageText->append(QString(msg.getUserName()+" user has already logged out!"));
+                                qDebug() << QString(msg.getUserName()+" user has already logged out!");
+                                out << reply;
+
+                                qDebug() << ClientList.size();
+                                for(auto iter=ClientList.begin(); iter!=ClientList.end(); iter++){
+                                    if(*iter!=client){
+                                        (*iter)->write(replyData);
+                                        (*iter)->flush();
+                                    }
+                                }
+
+                                QByteArray replyData2;
+                                QDataStream out2(&replyData2, QIODevice::WriteOnly);
+                                Message reply2;
+                                reply2.setMsgType("MD_QUIT");
+                                reply2.setInetAddress("q1");
+                                reply2.setMsgText("q2");
+                                reply2.setUserName("q3");
+                                reply2.setUserPwd("q4");
+                                out2 << reply2;
+                                qDebug() << replyData2;
+                                client->write(replyData2);
+                                client->flush();
+
                                 auto tmp = it;
                                 tmp++;
                                 ClientList.erase(it);
                                 it = tmp;
-                                continue;
+                                break;
                             }
                         }
-                        reply.setMsgType("MD_TALK");//转发给其他用户，有用户退出
-                        reply.setMsgText(QString(msg.getUserName()+" user has already logged out!"));
-                        ui->ShowMessageText->append(QString(msg.getUserName()+" user has already logged out!"));
-
-                        out << reply;
-                        qDebug() << ClientList.size();
-                        for(auto it=ClientList.begin(); it!=ClientList.end(); it++){
-                            (*it)->write(replyData);
-                            (*it)->flush();
-                        }
+                        return;
                     }
                 });
             });
@@ -139,7 +147,6 @@ Widget::Widget(QWidget *parent) :
 
 Widget::~Widget()
 {
-    m_server->close();
     delete m_server;
     for(auto it=ClientList.begin(); it!=ClientList.end(); it++){
         auto tmp = it;
