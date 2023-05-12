@@ -1,4 +1,5 @@
 #include "message.h"
+#include<QDebug>
 
 Message::Message()
 {
@@ -49,25 +50,38 @@ quint16 Message::getPort(){
 }
 
 QDataStream& operator<<(QDataStream& out, const Message& obj){
-    out << obj.strInetAddress << obj.strMsgText << obj.strMsgType
-         << obj.strUserName << obj.strUserPwd;
+    out << obj.strInetAddress;
+    out << obj.strMsgText;
+    out << obj.Port;
+    out << obj.strMsgType;
+    out << obj.strUserName;
+    out << obj.strUserPwd;
     return out;
 }
+
 QDataStream& operator>>(QDataStream& in, Message& msg){
     // 依次读取各个成员变量
-   QString userName;
-   QString userPwd;
+
    QString inetAddress;
    QString text;
+   quint16 port;
    QString msgType;
+   QString userName;
+   QString userPwd;
 
-   in >> inetAddress >> text >> msgType >> userName >> userPwd;
+   in >> inetAddress;
+   in >> text;
+   in >> port;
+   in >> msgType;
+   in >> userName;
+   in >> userPwd;
 
-   msg.setUserName(userName);
-   msg.setUserPwd(userPwd);
    msg.setInetAddress(inetAddress);
    msg.setMsgText(text);
+   msg.setPort(port);
    msg.setMsgType(msgType);
+   msg.setUserName(userName);
+   msg.setUserPwd(userPwd);
 
    return in;
 }

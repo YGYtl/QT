@@ -17,6 +17,10 @@ Client::Client(QWidget *parent, QTcpSocket* tcpSocket, QString username):QWidget
 {
     ui->setupUi(this);
 
+    connect(ui->loyoutButton, &QPushButton::clicked,[=](){
+        SendMessage("MD_QUIT");
+    });
+
     connect(ui->sendButton,&QPushButton::clicked,[=](){
         SendMessage("MD_TALK");
     });
@@ -27,6 +31,11 @@ Client::Client(QWidget *parent, QTcpSocket* tcpSocket, QString username):QWidget
         QDataStream in(&data, QIODevice::ReadOnly);
         Message msg;
         in >> msg;
+
+        qDebug() << msg.getMsgType();
+        if(msg.getMsgType() == "MD_QUIT"){
+            this->close();
+        }
 
         qDebug() << msg.getMsgType();
         qDebug() << msg.getMsgText();
@@ -54,7 +63,7 @@ void Client::SendMessage(QString MsgType)
     Message msg;
     msg.setUserName(UserName);
     msg.setMsgType(MsgType);
-    if(ui->textEdit->text() != QString("")){
+    if(ui->textEdit->text() != QString("") || MsgType == "MD_QUIT"){
         msg.setMsgText(ui->textEdit->text());
         out << msg;
         m_tcpSocket->write(data);
@@ -65,6 +74,6 @@ void Client::SendMessage(QString MsgType)
 
 Client::~Client()
 {
-    delete m_tcpSocket;
+    //delete m_tcpSocket;
     delete ui;
 }
