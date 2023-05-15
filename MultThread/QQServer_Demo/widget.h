@@ -16,12 +16,18 @@ class Widget : public QWidget
 
 public:
     explicit Widget(QWidget *parent = nullptr);
+    void SendAllClient(QByteArray replyData);
     ~Widget();
+
+signals:
+    void adPerson(QString strmemberlist);
 
 private:
     Ui::Widget *ui;
     QTcpServer* m_server;
     QList<QTcpSocket*> m_tcpList;
+    QList<QString> memberList;
+    QString strMemberList;
 };
 
 

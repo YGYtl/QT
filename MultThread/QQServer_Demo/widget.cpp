@@ -14,7 +14,7 @@ Widget::Widget(QWidget *parent) :
         m_server = new QTcpServer(this);
         QString IpAddress = ui->ipText->text();
         unsigned short port = ui->portText->text().toUShort();
-        if (!m_server->listen(QHostAddress::Any, port)) {//QHostAddress::Any
+        if (!m_server->listen(QHostAddress::Any, port)) {
             qCritical() << "Failed to start server:" << m_server->errorString();
         }
         else{
@@ -34,12 +34,7 @@ Widget::Widget(QWidget *parent) :
                     m_tcpList.push_back(tc);
                 });
 
-                connect(subThread, &RecvMessage::sendAllPeople, this, [=](QByteArray replyData){
-                    for(auto it = m_tcpList.begin(); it!=m_tcpList.end(); it++){
-                        (*it)->write(replyData);
-                        (*it)->waitForBytesWritten();
-                    }
-                });
+                connect(subThread, &RecvMessage::sendAllPeople, this, &Widget::SendAllClient);
 
                 connect(subThread, &RecvMessage::deleteTcpSocket, this, [=](QTcpSocket* tcp){
                     tcp->disconnectFromHost();
@@ -54,16 +49,46 @@ Widget::Widget(QWidget *parent) :
                     }
                 });
 
-                subThread->start();
-                connect(subThread,&RecvMessage::exit, this, [=](){
-                    subThread->exit();
-                    subThread->wait();
-                    subThread->deleteLater();
+                connect(this, &Widget::adPerson, subThread, &RecvMessage::DadPeron);
+
+                connect(subThread, &RecvMessage::addPerson, this, [=](QString name){
+                   memberList.push_back(name);
+                   QString str = "";
+                   for(auto it = memberList.begin(); it!=memberList.end(); it++){
+                       str += *it;
+                       str += ":";
+                   }
+                   strMemberList = str;
+                   emit adPerson(strMemberList);
                 });
 
+                connect(subThread, &RecvMessage::deletePerson, this, [=](QString name){
+                    QString str = "";
+                    QList<QString> newMemberList;
+                    for (const auto& member : memberList) {
+                        if (member == name) {
+                            continue;
+                        }
+                        newMemberList.push_back(member);
+                        str += member + ":";
+                    }
+                    memberList = newMemberList;
+                    strMemberList = str;
+                    emit adPerson(strMemberList);
+                });
+
+
+                subThread->start();
             });
         }
     });
+}
+
+void Widget::SendAllClient(QByteArray replyData){
+    for(auto it = m_tcpList.begin(); it!=m_tcpList.end(); it++){
+        (*it)->write(replyData);
+        (*it)->waitForBytesWritten();
+    }
 }
 
 Widget::~Widget()

@@ -24,20 +24,21 @@ protected:
     void run() override;
 signals:
     void appendText(QString text);
-    void threadStarted();
-    void threadFinished();
+    void addPerson(QString name);
+    void deletePerson(QString name);
     void exit();
     void deleteTcpSocket(QTcpSocket* tcp);
     void addTcpSocket(QTcpSocket* tcp);
     void sendAllPeople(QByteArray text);
 
 public slots:
-
+    void DadPeron(QString strmemberlist);
 private:
     QTcpSocket* m_tcp;
-    MemberManager Mm;
+    MemberManager* Mm;
     QList<QTcpSocket*> m_tcpList;
     QMutex m_mutex;//定义互斥锁
+    QString strMemberlist;
 };
 
 #endif // RECVMESSAGE_H
